@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -29,7 +29,9 @@ class Data(db.Model):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    all_data = Data.query.all()
+    
+    return render_template("index.html", contacts = all_data)
 
 
 @app.route('/addContact', methods = ['POST'])
@@ -46,10 +48,39 @@ def addContact():
         db.session.add(my_data)
         db.session.commit()
         
+        flash("Contact Added successfully")
+        
         return redirect(url_for('index'))
+    
+    
+    
+
+
+@app.route("/edit", methods= ["GET", "POST"])
+def update():
+    
+    if request.method == 'POST':
+        my_data = Data.query.get(request.form.get("id"))
+        
+        my_data.name = request.form["name"]
+        my_data.email = request.form["email"]
+        my_data.phone = request.form["phone"]
+        
+        
+        db.session.commit()
+        flash("Contact updated successfully")
+        return redirect(url_for("index"))
         
     
 
+@app.route("/delete/<id>/", methods = ['GET', 'POST'])
+def delete(id):
+    
+    my_data = Data.query.get(id)
+    db.session.delete(my_data)
+    db.session.commit()
+    flash("Contact deleted successfuly")
+    return redirect(url_for("index"))
 
 
 
